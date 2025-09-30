@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 interface CartItem {
   id: number;
@@ -15,6 +16,8 @@ interface CartItem {
   styleUrl: './cart.scss',
 })
 export class Cart {
+  constructor(private router: Router) {}
+
   cart: CartItem[] = [
     {
       id: 1,
@@ -45,5 +48,14 @@ export class Cart {
 
   removeItem(id: number) {
     this.cart = this.cart.filter((item) => item.id !== id);
+  }
+
+  // process to checkout
+  proceedToCheckout() {
+    // 📝 TODO: Add validation (e.g. check if cart is empty, save cart state, etc.)
+    console.log('Proceeding to checkout...');
+
+    // Redirect to checkout page
+    this.router.navigate(['/checkout']);
   }
 }

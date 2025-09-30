@@ -1,0 +1,79 @@
+<div class="container mx-auto px-4 py-10">
+  <h1 class="text-2xl font-bold mb-6">My Profile</h1>
+
+  <div class="grid md:grid-cols-3 gap-8">
+    <!-- User Info -->
+    <div class="border rounded-lg p-6 bg-white shadow-md flex flex-col items-center">
+      <img
+        [src]="user.avatar"
+        alt="Profile picture"
+        class="w-24 h-24 rounded-full object-cover mb-4"
+      />
+      <h2 class="text-lg font-semibold">{{ user.name }}</h2>
+      <p class="text-gray-600">{{ user.email }}</p>
+      <button
+        (click)="toggleEdit()"
+        class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+      >
+        {{ isEditing ? 'Cancel' : 'Edit Profile' }}
+      </button>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="md:col-span-2 border rounded-lg p-6 bg-white shadow-md">
+      @if (isEditing) {
+        <form  (ngSubmit)="saveProfile()" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input
+              type="text"
+              [(ngModel)]="user.name"
+              name="name"
+              class="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              [(ngModel)]="user.email"
+              name="email"
+              class="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="New password"
+              class="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+          >
+            Save Changes
+          </button>
+        </form>
+    }
+      <!-- If not editing -->
+       @if (!isEditing) {
+        <div  class="text-gray-600">
+          <p>Manage your profile information and see your order history here.</p>
+        </div>
+        }
+    </div>
+  </div>
+
+  <!-- Order History -->
+  <div class="mt-10 border rounded-lg p-6 bg-white shadow-md">
+    <h2 class="text-xl font-bold mb-4">Order History</h2>
+    <p class="text-gray-600">No orders yet.</p>
+    <!-- Later: loop through orders from OrdersService -->
+  </div>
+</div>

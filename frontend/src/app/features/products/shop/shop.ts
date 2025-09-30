@@ -12,27 +12,32 @@ import { ProductCard } from '../../../shared/components/product-card/product-car
 export class Shop {
   products = [
     {
+      id: 1,
       name: 'Wireless Headphones',
       price: 99.99,
       image:
         'https://imageplaceholder.net/600x400/eeeeee/131313?text=Wireless+Headphones&tag=summer',
     },
     {
+      id: 2,
       name: 'Smart Watch',
       price: 149.99,
       image: 'https://imageplaceholder.net/600x400/f0f0f0/131313?text=Smart+Watch',
     },
     {
+      id: 3,
       name: 'Gaming Mouse',
       price: 49.99,
       image: 'https://imageplaceholder.net/600x400/f0f0f0/131313?text=Gaming+Mouse',
     },
     {
+      id: 4,
       name: 'Mechanical Keyboard',
       price: 89.99,
       image: 'https://imageplaceholder.net/600x400/f0f0f0/131313?text=Keyboard',
     },
     {
+      id: 5,
       name: 'Mechanical Keyboard',
       price: 55.99,
       image: 'https://imageplaceholder.net/600x400/f0f0f0/131313?text=Keyboard',
