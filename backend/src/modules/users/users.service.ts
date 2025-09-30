@@ -6,21 +6,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
     constructor(private prisma: PrismaService) {}
 
-    async findAll(city?: string, page = 1, limit = 10) {
-        const where = {
-            city,
-        };
-
+    async findAll(page = 1, limit = 10) {
         const [users, total] = await Promise.all([
             this.prisma.user.findMany({
-                where,
                 skip: (page - 1) * limit,
                 take: limit,
                 orderBy: {
-                    created_at: 'desc',
+                    createdAt: 'desc',
                 },
             }),
-            this.prisma.user.count({ where }),
+            this.prisma.user.count(),
         ]);
 
         return {
@@ -34,21 +29,21 @@ export class UsersService {
         };
     }
 
-    async findOne(id: string) {
+    async findOne(id: number) {
         return this.prisma.user.findUnique({
             where: { id },
         });
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto) {
+    async update(id: number, updateUserDto: UpdateUserDto) {
         return this.prisma.user.update({
             where: { id },
             data: updateUserDto,
-            select: { id: true, full_name: true, email: true, phone: true, date_of_birth: true, address: true, city: true, lat: true, photo_url: true },
+            select: { id: true, name: true, email: true, photo_url: true },
         });
     }
 
-    async remove(id: string) {
+    async remove(id: number) {
         return this.prisma.user.delete({
             where: { id },
         });

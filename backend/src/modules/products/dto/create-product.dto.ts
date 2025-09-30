@@ -1,6 +1,8 @@
 export class CreateProductDto {
-    title: string;
-    message: string;
-    booking_id: string;
-    is_read: boolean;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    stock: number;
+    categoryId: number;
 }

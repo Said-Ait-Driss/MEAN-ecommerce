@@ -1,6 +1,5 @@
 // define enum for user roles
 export enum Role {
-    USER = 'USER',
-    CLEANER = 'CLEANER',
+    USER = 'CUSTOMER',
     ADMIN = 'ADMIN',
 }

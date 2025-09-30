@@ -3,10 +3,6 @@ import { IsOptional, IsString } from 'class-validator';
 export class FindUsersDto {
     @IsOptional()
     @IsString()
-    city?: string;
-
-    @IsOptional()
-    @IsString()
     page?: number;
 
     @IsOptional()

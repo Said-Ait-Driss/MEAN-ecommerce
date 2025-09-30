@@ -10,15 +10,10 @@ export class FilesController {
     constructor(private readonly photoService: FilesService) {}
 
     @UseGuards(RolesGuard)
-    @Roles(Role.USER, Role.CLEANER)
+    @Roles(Role.USER)
     @Post('upload/photo')
     @UseInterceptors(FileInterceptor('file'))
     async uploadOfCleaner(@Req() req, @UploadedFile() file: Express.Multer.File) {
-        const user = req.user;
-        if (user.role === Role.USER) {
-            return await this.photoService.uploadLocalUsers(file);
-        }
-        // if user is cleaner
-        return await this.photoService.uploadLocalCleaners(file);
+        return await this.photoService.uploadLocalUsers(file);
     }
 }

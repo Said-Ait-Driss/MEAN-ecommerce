@@ -12,26 +12,9 @@ export class FilesService {
         return { url: res.path };
     }
 
-    async uploadLocalCleaners(file: Express.Multer.File) {
-        const filename = await this.generateFileName(file.originalname);
-        const path = `uploads/cleaners/${filename}`;
-
-        const res = await Storage.disk('cleaner_local').put(path, file.buffer);
-        return { url: res.path };
-    }
-
-    async getFileUrlOfCleaner(filename: string) {
-        const path = `uploads/cleaners/${filename}`;
-        return path;
-    }
-
     async getFileUrlOfUser(filename: string) {
         const path = `uploads/users/${filename}`;
         return path;
-    }
-
-    async deleteFileOfCleaner(filename: string) {
-        return Storage.disk('cleaner_local').delete(filename);
     }
 
     async deleteFileOfUser(filename: string) {

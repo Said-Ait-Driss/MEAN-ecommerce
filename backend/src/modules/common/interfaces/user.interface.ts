@@ -1,11 +1,8 @@
 export interface User {
     id: string;
     email: string;
-    fullName: string;
-    phone: string;
-    phoneCode: string;
-    dateOfBirth?: string;
-    role: 'USER' | 'CLEANER';
+    name: string;
+    role: 'ADMIN' | 'CUSTOMER';
     createdAt: Date;
     updatedAt: Date;
 }

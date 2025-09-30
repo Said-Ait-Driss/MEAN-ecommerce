@@ -14,30 +14,5 @@ export class RegisterDto {
 
     @IsString()
     @IsNotEmpty()
-    fullName: string;
-
-    @IsString()
-    @IsNotEmpty()
-    phone: string;
-
-    @IsDefined()
-    @IsString()
-    @IsNotEmpty()
-    phoneCode: string;
-
-    @IsOptional()
-    @IsString()
-    dateOfBirth: string;
-
-    @IsString()
-    @IsNotEmpty()
-    city: string;
-
-    @IsString()
-    @IsOptional()
-    address: string;
-
-    @IsString()
-    @IsNotEmpty()
-    role: Role;
+    name: string;
 }

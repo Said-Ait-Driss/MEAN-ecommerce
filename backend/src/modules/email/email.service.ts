@@ -30,8 +30,8 @@ export class EmailService {
         }
     }
 
-    async sendVerificationEmail(email: string, token: string, userType: 'USER' | 'CLEANER' = 'USER') {
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}&type=${userType.toLowerCase()}`;
+    async sendVerificationEmail(email: string, token: string) {
+        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}}`;
 
         const mailOptions = {
             from: process.env.SMTP_FROM,

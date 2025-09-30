@@ -49,7 +49,7 @@ export class AuthController {
 
     @Get('profile')
     @UseGuards(RolesGuard)
-    @Roles(Role.USER, Role.CLEANER)
+    @Roles(Role.USER)
     async getProfile(@Req() req: Request & { user: User }, @Res() res: Response) {
         const user = req.user;
         if (!user) {
@@ -61,28 +61,28 @@ export class AuthController {
     // update password
     @Patch('/password/:id')
     @UseGuards(RolesGuard)
-    @Roles(Role.USER, Role.CLEANER)
+    @Roles(Role.USER)
     async updatePassword(@Param('id') userId, @Body() updatePasswordDto: UpdatePasswordDto) {
         return this.auth.updatePassword(userId, updatePasswordDto.currentPassword, updatePasswordDto.newPassword, updatePasswordDto.role);
     }
 
     // email verifications
     @Post('verify-email/initiate')
-    async initiateEmailVerification(@Body('email') email: string, @Body('isCleaner') isCleaner: boolean = false) {
+    async initiateEmailVerification(@Body('email') email: string) {
         if (!email) {
             throw new BadRequestException('Email is required');
         }
-        return this.auth.initiateEmailVerification(email, isCleaner);
+        return this.auth.initiateEmailVerification(email);
     }
 
     @Get('verify-email')
-    async verifyEmail(@Query('token') token: string, @Query('type') type: 'USER' | 'CLEANER' = 'USER') {
-        return this.auth.verifyEmail(token, type);
+    async verifyEmail(@Query('token') token: string) {
+        return this.auth.verifyEmail(token);
     }
 
     @Post('resend-verification')
-    async resendVerification(@Body() resendDto: ResendVerificationDto, @Query('type') type: 'USER' | 'CLEANER' = 'USER') {
-        return this.auth.resendVerificationEmail(resendDto.email, type);
+    async resendVerification(@Body() resendDto: ResendVerificationDto) {
+        return this.auth.resendVerificationEmail(resendDto.email);
     }
 
     // google

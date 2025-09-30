@@ -11,6 +11,10 @@ import { FilesModule } from './modules/files/files.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { EmailModule } from './modules/email/email.module';
+import { ProductsModule } from './modules/products/product.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { CartModule } from './modules/cart/cart.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
     imports: [
@@ -40,6 +44,10 @@ import { EmailModule } from './modules/email/email.module';
         }),
         FilesModule,
         EmailModule,
+        ProductsModule,
+        CategoriesModule,
+        CartModule,
+        OrdersModule,
     ],
 
     controllers: [AppController],

@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Response } from 'express';
 import { RegisterDto } from './dto/register.dto';
@@ -8,7 +7,6 @@ import { LoginDto } from './dto/login.dto';
 import { Role } from 'src/modules/common/enums/role.enum';
 import * as crypto from 'crypto';
 import { InvalidRoleException } from './exceptions/invalid-role.exception';
-import { CleanerAlreadyExistsException } from './exceptions/cleaner-already-exists';
 import { UserAlreadyExistsException } from './exceptions/user-already-exists';
 import { InvalidCredentialsException } from './exceptions/invalid_credentials.exception';
 import { EmailNotVerifiedException } from './exceptions/email-not-verified.exception';
@@ -46,19 +44,11 @@ export class AuthService {
     }
 
     async register(dto: RegisterDto) {
-        if (dto.role && ![Role.USER, Role.CLEANER].includes(dto.role)) {
-            throw new InvalidRoleException();
-        }
-
         const salt = this.generateSalt();
         const hashed = this.encryptPassword(dto.password, salt);
 
-        const existingUser = await this.prisma.user.findFirst({ where: { OR: [{ email: dto.email }, { phone: dto.phone }] } });
-        const existingCleaner = await this.prisma.cleaner.findFirst({ where: { OR: [{ email: dto.email }, { phone: dto.phone }] } });
+        const existingUser = await this.prisma.user.findFirst({ where: { OR: [{ email: dto.email }] } });
 
-        if (existingCleaner) {
-            throw new CleanerAlreadyExistsException();
-        }
         if (existingUser) {
             throw new UserAlreadyExistsException();
         }
@@ -72,64 +62,34 @@ export class AuthService {
             emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours
         }
 
-        // Create a cleaner if the role is CLEANER
-        if (dto.role === Role.CLEANER) {
-            const cleaner = await this.prisma.cleaner.create({
-                data: {
-                    email: dto.email,
-                    password_hash: hashed,
-                    salt,
-                    full_name: dto.fullName,
-                    phone: dto.phone,
-                    phone_code: dto.phoneCode,
-                    date_of_birth: dto.dateOfBirth,
-                    photo_url: 'uploads/cleaners/cleaner-woman.jpg',
-                    email_verification_token: emailVerificationToken,
-                    email_verification_expires: emailVerificationExpires,
-                },
-            });
-            const emailresult = await this.emailService.sendVerificationEmail(dto.email, emailVerificationToken, dto.role);
-            if (emailresult.success) {
-                return { id: cleaner.id, email: cleaner.email, role: dto.role, is_verified: false, email_sent: true };
-            } else {
-                return { id: cleaner.id, email: cleaner.email, role: dto.role, is_verified: false, email_sent: false };
-            }
-        }
         // Create a user if the role is USER
-        if (dto.role === Role.USER) {
-            const user = await this.prisma.user.create({
-                data: {
-                    email: dto.email,
-                    password_hash: hashed,
-                    salt,
-                    full_name: dto.fullName,
-                    phone: dto.phone,
-                    phone_code: dto.phoneCode,
-                    date_of_birth: dto.dateOfBirth,
-                    address: dto.address,
-                    photo_url: 'uploads/users/default-avatar-profile.jpg',
-                    email_verification_token: emailVerificationToken,
-                    email_verification_expires: emailVerificationExpires,
-                },
-            });
-            // Send verification email if email is provided
-            const emailresult = await this.emailService.sendVerificationEmail(dto.email, emailVerificationToken, dto.role);
-            console.log(emailresult.success);
-            console.log(emailresult.error);
+        const user = await this.prisma.user.create({
+            data: {
+                email: dto.email,
+                password: hashed,
+                salt,
+                name: dto.name,
+                photo_url: 'uploads/users/default-avatar-profile.jpg',
+                email_verification_token: emailVerificationToken,
+                email_verification_expires: emailVerificationExpires,
+            },
+        });
+        // Send verification email if email is provided
+        const emailresult = await this.emailService.sendVerificationEmail(dto.email, emailVerificationToken);
+        console.log(emailresult.success);
+        console.log(emailresult.error);
 
-            if (emailresult.success) {
-                return { id: user.id, email: user.email, role: dto.role, is_verified: false, email_sent: true };
-            } else {
-                return { id: user.id, email: user.email, role: dto.role, is_verified: false, email_sent: false };
-            }
+        if (emailresult.success) {
+            return { id: user.id, email: user.email, is_verified: false, email_sent: true };
+        } else {
+            return { id: user.id, email: user.email, is_verified: false, email_sent: false };
         }
     }
 
     async checkIfEmailIsExists(email: string) {
         const existingUser = await this.prisma.user.findFirst({ where: { email: email } });
-        const existingCleaner = await this.prisma.cleaner.findFirst({ where: { email: email } });
 
-        if (existingCleaner || existingUser) {
+        if (existingUser) {
             return {
                 exists: true,
             };
@@ -142,11 +102,7 @@ export class AuthService {
     async login(dto: LoginDto, res: Response) {
         // Use the user if it exists, otherwise use the cleaner
         let userToAuthenticate;
-        if (dto.role === Role.CLEANER) {
-            userToAuthenticate = await this.prisma.cleaner.findUnique({ where: { email: dto.email } });
-        } else {
-            userToAuthenticate = await this.prisma.user.findUnique({ where: { email: dto.email } });
-        }
+        userToAuthenticate = await this.prisma.user.findUnique({ where: { email: dto.email } });
 
         // If neither user nor cleaner exists, throw an error
         if (!userToAuthenticate) {
@@ -164,9 +120,6 @@ export class AuthService {
 
         // Generate JWT token
         const payload = { sub: userToAuthenticate.id, role: Role.USER };
-        if (dto.role === Role.CLEANER) {
-            payload.role = Role.CLEANER;
-        }
 
         const token = this.jwt.sign(payload);
 
@@ -182,10 +135,6 @@ export class AuthService {
 
         const data = { id: userToAuthenticate.id, email: userToAuthenticate.email, role: Role.USER };
 
-        if (dto.role === Role.CLEANER) {
-            data.role = Role.CLEANER;
-        }
-
         return res.status(200).json({ message: 'Login successful', data });
     }
 
@@ -193,11 +142,6 @@ export class AuthService {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (user) {
             await this.prisma.user.delete({ where: { email } });
-            return true;
-        }
-        const cleaner = await this.prisma.cleaner.findUnique({ where: { email } });
-        if (cleaner) {
-            await this.prisma.cleaner.delete({ where: { email } });
             return true;
         }
         return false;
@@ -219,19 +163,13 @@ export class AuthService {
         if (user) {
             return { ...user, role: Role.USER };
         }
-        const cleaner = await this.prisma.cleaner.findUnique({ where: { id: decoded.sub } });
-        if (cleaner) {
-            return { ...cleaner, role: Role.CLEANER };
-        }
         throw new UnauthorizedException('User not found');
     }
 
-    async updatePassword(userId: string, currentPassword: string, newPassword: string, role: Role): Promise<boolean> {
+    async updatePassword(userId: number, currentPassword: string, newPassword: string, role: Role): Promise<boolean> {
         // Find the user based on role
         let user;
-        if (role === Role.CLEANER) {
-            user = await this.prisma.cleaner.findUnique({ where: { id: userId } });
-        } else if (role === Role.USER) {
+        if (role === Role.USER) {
             user = await this.prisma.user.findUnique({ where: { id: userId } });
         } else {
             throw new InvalidRoleException();
@@ -252,22 +190,13 @@ export class AuthService {
         const newHashedPassword = this.encryptPassword(newPassword, newSalt);
 
         // Update the password in the database based on role
-        if (role === Role.CLEANER) {
-            await this.prisma.cleaner.update({
-                where: { id: userId },
-                data: {
-                    password_hash: newHashedPassword,
-                    salt: newSalt,
-                    updated_at: new Date(),
-                },
-            });
-        } else if (role === Role.USER) {
+        if (role === Role.USER) {
             await this.prisma.user.update({
                 where: { id: userId },
                 data: {
-                    password_hash: newHashedPassword,
+                    password: newHashedPassword,
                     salt: newSalt,
-                    updated_at: new Date(),
+                    updatedAt: new Date(),
                 },
             });
         }
@@ -276,50 +205,30 @@ export class AuthService {
     }
 
     // email verification
-    async initiateEmailVerification(email: string, isCleaner: boolean = false) {
+    async initiateEmailVerification(email: string) {
         // Generate verification token
         const token = crypto.randomBytes(32).toString('hex');
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         // Find user or cleaner
-        let user, cleaner;
-        if (isCleaner) {
-            cleaner = await this.prisma.cleaner.findUnique({ where: { email } });
-            if (!cleaner) {
-                throw new UserNotFoundException();
-            }
-            if (cleaner.is_verified) {
-                throw new UserAlreadyVerifiedException();
-            }
-
-            // Update cleaner with verification token
-            await this.prisma.cleaner.update({
-                where: { email },
-                data: {
-                    email_verification_token: token,
-                    email_verification_expires: expires.toISOString(),
-                },
-            });
-        } else {
-            user = await this.prisma.user.findUnique({ where: { email } });
-            if (!user) {
-                throw new UserNotFoundException();
-            }
-            if (user.is_verified) {
-                throw new UserAlreadyVerifiedException();
-            }
-            // Update user with verification token
-            await this.prisma.user.update({
-                where: { email },
-                data: {
-                    email_verification_token: token,
-                    email_verification_expires: expires.toISOString(),
-                },
-            });
+        let user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            throw new UserNotFoundException();
         }
+        if (user.is_verified) {
+            throw new UserAlreadyVerifiedException();
+        }
+        // Update user with verification token
+        await this.prisma.user.update({
+            where: { email },
+            data: {
+                email_verification_token: token,
+                email_verification_expires: expires.toISOString(),
+            },
+        });
 
         // Send verification email
-        const emailSent = await this.emailService.sendVerificationEmail(email, token, isCleaner ? 'CLEANER' : 'USER');
+        const emailSent = await this.emailService.sendVerificationEmail(email, token);
 
         if (!emailSent) {
             throw new BadRequestException('Failed to send verification email');
@@ -328,8 +237,8 @@ export class AuthService {
         return { message: 'Verification email sent successfully' };
     }
 
-    async verifyEmail(token: string, userType: 'USER' | 'CLEANER' = 'USER') {
-        const model: any = userType === 'USER' ? this.prisma.user : this.prisma.cleaner;
+    async verifyEmail(token: string) {
+        const model: any = this.prisma.user;
 
         const entity = await model.findFirst({
             where: {
@@ -354,7 +263,7 @@ export class AuthService {
             },
             select: {
                 id: true,
-                full_name: true,
+                name: true,
                 email: true,
                 is_verified: true,
             },
@@ -362,17 +271,17 @@ export class AuthService {
 
         // Send welcome email
         if (entity.email) {
-            await this.emailService.sendWelcomeEmail(entity.email, entity.full_name);
+            await this.emailService.sendWelcomeEmail(entity.email, entity.name);
         }
 
         return {
             message: 'email-verified-successfully',
-            [userType]: updatedEntity,
+            data: updatedEntity,
         };
     }
 
-    async resendVerificationEmail(email: string, userType: 'USER' | 'CLEANER' = 'USER') {
-        const model: any = userType === 'USER' ? this.prisma.user : this.prisma.cleaner;
+    async resendVerificationEmail(email: string) {
+        const model: any = this.prisma.user;
 
         const entity = await model.findFirst({
             where: { email },
@@ -400,7 +309,7 @@ export class AuthService {
         });
 
         // Send verification email
-        await this.emailService.sendVerificationEmail(email, emailVerificationToken, userType);
+        await this.emailService.sendVerificationEmail(email, emailVerificationToken);
 
         return {
             message: 'verification-email-sent-successfully',
@@ -430,7 +339,7 @@ export class AuthService {
             throw new AuthErrorException();
         }
 
-        const model: any = type === 'USER' ? this.prisma.user : this.prisma.cleaner;
+        const model: any = this.prisma.user;
 
         const user = await model.findUnique({
             where: {
@@ -486,7 +395,7 @@ export class AuthService {
         if (!profile.email || !profile.verified_email) {
             throw new AuthErrorException();
         }
-        const model: any = type === 'USER' ? this.prisma.user : this.prisma.cleaner;
+        const model: any = this.prisma.user;
 
         const userToAuthenticate = await model.findUnique({
             where: {
@@ -500,9 +409,6 @@ export class AuthService {
 
         // Generate JWT token
         const jwtPayload = { sub: userToAuthenticate.id, role: Role.USER };
-        if (type === Role.CLEANER) {
-            jwtPayload.role = Role.CLEANER;
-        }
 
         const token = this.jwt.sign(jwtPayload);
 
@@ -517,10 +423,6 @@ export class AuthService {
         });
 
         const data = { id: userToAuthenticate.id, email: userToAuthenticate.email, role: Role.USER };
-
-        if (type === Role.CLEANER) {
-            data.role = Role.CLEANER;
-        }
 
         return response.status(200).json({ message: 'Login successful', data });
     }
