@@ -59,11 +59,21 @@ export class AuthController {
     }
 
     // update password
-    @Patch('/password/:id')
+    @Patch('/password/update')
     @UseGuards(RolesGuard)
     @Roles(Role.USER)
-    async updatePassword(@Param('id') userId, @Body() updatePasswordDto: UpdatePasswordDto) {
-        return this.auth.updatePassword(userId, updatePasswordDto.currentPassword, updatePasswordDto.newPassword, updatePasswordDto.role);
+    async updatePassword(@Req() req: Request & { user: User }, @Body() updatePasswordDto: UpdatePasswordDto, @Res() res: Response) {
+        const user = req.user;
+        if (!user) {
+            return res.status(HttpStatus.UNAUTHORIZED).json({ message: 'Unauthorized' });
+        }
+        const userId = user.id;
+        const isUpdated = await this.auth.updatePassword(userId, updatePasswordDto.currentPassword, updatePasswordDto.newPassword);
+        if (isUpdated) {
+            return res.status(HttpStatus.OK).json({ message: 'Password updated successfully' });
+        } else {
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Current password is incorrect' });
+        }
     }
 
     // email verifications

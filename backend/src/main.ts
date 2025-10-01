@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 
-export const ALLOWED_ORIGINS = ['http://172.17.0.1:5173', 'http://localhost:5173', 'http://192.168.1.9', 'http://192.168.1.9:5173'];
+export const ALLOWED_ORIGINS = ['*', 'http://172.17.0.1:5173', 'http://localhost:5173', 'http://192.168.1.9', 'http://192.168.1.9:5173'];
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);

@@ -40,7 +40,7 @@ export class AuthService {
         if (!pw || !user || !user.salt) {
             return false;
         }
-        return this.encryptPassword(pw, user.salt) === user.password_hash;
+        return this.encryptPassword(pw, user.salt) === user.password;
     }
 
     async register(dto: RegisterDto) {
@@ -100,9 +100,8 @@ export class AuthService {
     }
 
     async login(dto: LoginDto, res: Response) {
-        // Use the user if it exists, otherwise use the cleaner
-        let userToAuthenticate;
-        userToAuthenticate = await this.prisma.user.findUnique({ where: { email: dto.email } });
+        // Use the user if it exists
+        let userToAuthenticate = await this.prisma.user.findUnique({ where: { email: dto.email } });
 
         // If neither user nor cleaner exists, throw an error
         if (!userToAuthenticate) {
@@ -166,14 +165,8 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
     }
 
-    async updatePassword(userId: number, currentPassword: string, newPassword: string, role: Role): Promise<boolean> {
-        // Find the user based on role
-        let user;
-        if (role === Role.USER) {
-            user = await this.prisma.user.findUnique({ where: { id: userId } });
-        } else {
-            throw new InvalidRoleException();
-        }
+    async updatePassword(userId: any, currentPassword: string, newPassword: string): Promise<boolean> {
+        let user = await this.prisma.user.findUnique({ where: { id: userId } });
 
         // Check if user exists
         if (!user) {
@@ -189,18 +182,18 @@ export class AuthService {
         const newSalt = this.generateSalt();
         const newHashedPassword = this.encryptPassword(newPassword, newSalt);
 
-        // Update the password in the database based on role
-        if (role === Role.USER) {
-            await this.prisma.user.update({
-                where: { id: userId },
-                data: {
-                    password: newHashedPassword,
-                    salt: newSalt,
-                    updatedAt: new Date(),
-                },
-            });
+        // Update the password in the database
+        const result = await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+                password: newHashedPassword,
+                salt: newSalt,
+                updatedAt: new Date(),
+            },
+        });
+        if (!result) {
+            throw new NotFoundException('User not found');
         }
-
         return true;
     }
 

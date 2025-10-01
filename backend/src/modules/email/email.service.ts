@@ -36,11 +36,11 @@ export class EmailService {
         const mailOptions = {
             from: process.env.SMTP_FROM,
             to: email,
-            subject: 'Email Verification - Cleaning Service',
+            subject: 'Email Verification - Ecommerce platform',
             html: `
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
           <h2 style="color: #333; text-align: center;">Email Verification</h2>
-          <p>Thank you for registering with our cleaning service platform!</p>
+          <p>Thank you for registering with our Ecommerce platform!</p>
           <p>Please click the button below to verify your email address:</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${verificationUrl}" 
@@ -72,16 +72,16 @@ export class EmailService {
         const mailOptions = {
             from: process.env.SMTP_FROM,
             to: email,
-            subject: 'Welcome to Cleaning Service Platform!',
+            subject: 'Welcome to Ecommerce Platform!',
             html: `
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
           <h2 style="color: #333; text-align: center;">Welcome ${fullName}!</h2>
-          <p>Your email has been successfully verified. Welcome to our cleaning service platform!</p>
+          <p>Your email has been successfully verified. Welcome to our Ecommerce platform!</p>
           <p>You can now:</p>
           <ul>
-            <li>Browse available cleaning services</li>
-            <li>Book appointments with verified cleaners</li>
-            <li>Manage your bookings and preferences</li>
+            <li>Browse available Products</li>
+            <li>buy featured products</li>
+            <li>Browse your orders history</li>
             <li>Leave reviews and ratings</li>
           </ul>
           <div style="text-align: center; margin: 30px 0;">
