@@ -8,15 +8,14 @@ export default registerAs('filesystem', () => ({
             driver: 'local',
             root: resolve(process.cwd(), 'uploads'), // folder for local storage
         },
-        cleaner_local: {
+        products_local: {
             driver: 'local',
-            root: resolve(process.cwd(), 'uploads', 'cleaners'), // folder for local storage
+            root: resolve(process.cwd(), 'uploads', 'products'), // folder for local storage
         },
-        user_local: {
+        users_local: {
             driver: 'local',
             root: resolve(process.cwd(), 'uploads', 'users'), // folder for local storage
         },
-
         s3: {
             driver: 's3',
             key: process.env.AWS_ACCESS_KEY_ID,

@@ -11,9 +11,17 @@ export class FilesController {
 
     @UseGuards(RolesGuard)
     @Roles(Role.USER)
-    @Post('upload/photo')
+    @Post('product/upload/photo')
     @UseInterceptors(FileInterceptor('file'))
-    async uploadOfCleaner(@Req() req, @UploadedFile() file: Express.Multer.File) {
+    async uploadOfProductPhoto(@Req() req, @UploadedFile() file: Express.Multer.File) {
+        return await this.photoService.uploadLocalProducts(file);
+    }
+
+    @UseGuards(RolesGuard)
+    @Roles(Role.USER)
+    @Post('user/upload/photo')
+    @UseInterceptors(FileInterceptor('file'))
+    async uploadOfUserPhoto(@Req() req, @UploadedFile() file: Express.Multer.File) {
         return await this.photoService.uploadLocalUsers(file);
     }
 }

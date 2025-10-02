@@ -118,7 +118,7 @@ export class AuthService {
         }
 
         // Generate JWT token
-        const payload = { sub: userToAuthenticate.id, role: Role.USER };
+        const payload = { sub: userToAuthenticate.id, role: userToAuthenticate.role };
 
         const token = this.jwt.sign(payload);
 
@@ -132,7 +132,7 @@ export class AuthService {
             path: '/',
         });
 
-        const data = { id: userToAuthenticate.id, email: userToAuthenticate.email, role: Role.USER };
+        const data = { id: userToAuthenticate.id, email: userToAuthenticate.email, role: userToAuthenticate.role };
 
         return res.status(200).json({ message: 'Login successful', data });
     }
